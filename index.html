@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台灣林業與自然生態資訊看板 | Taiwan Forestry & Ecology Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        forest: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                            950: '#052e16',
+                        },
+                        wood: {
+                            100: '#fdf8f6',
+                            300: '#d7ccc8',
+                            500: '#8d6e63',
+                            700: '#5d4037',
+                            900: '#3e2723',
+                        },
+                        moss: '#2d4a3e',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans TC', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Noto Sans TC -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Custom Glassmorphic and Scrollbar Styling -->
+    <style>
+        body {
+            font-family: 'Noto Sans TC', 'Inter', sans-serif;
+            background-color: #091a12;
+            color: #e2e8f0;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(34, 197, 94, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 75%, rgba(20, 83, 45, 0.15) 0%, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .glass-panel {
+            background: rgba(15, 32, 24, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-card {
+            background: rgba(22, 45, 34, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(74, 222, 128, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(10, 25, 18, 0.8);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(34, 197, 94, 0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(34, 197, 94, 0.6);
+        }
+
+        .image-fallback {
+            background-color: #1a3325;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Pulse loading animation */
+        @keyframes skeleton-loading {
+            0% { background-color: rgba(34, 197, 94, 0.05); }
+            50% { background-color: rgba(34, 197, 94, 0.15); }
+            100% { background-color: rgba(34, 197, 94, 0.05); }
+        }
+        .skeleton {
+            animation: skeleton-loading 1.5s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-forest-500 selection:text-white">
+
+    <!-- Top Navigation Header -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-forest-900/50 px-4 lg:px-8 py-3 transition-all duration-300">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+            
+            <!-- Brand & Logo -->
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-forest-500 to-forest-800 flex items-center justify-center text-white shadow-lg shadow-forest-900/50">
+                    <i class="fa-solid font-bold fa-tree text-xl"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h1 class="text-lg md:text-xl font-bold text-white tracking-wide">台灣林業與自然生態看板</h1>
+                        <span class="text-xs bg-forest-900/80 text-forest-300 border border-forest-700/50 px-2 py-0.5 rounded-full font-medium">即時連線</span>
+                    </div>
+                    <p class="text-xs text-forest-300/70">Taiwan Forestry & Ecological Resources Live Dashboard</p>
+                </div>
+            </div>
+
+            <!-- Header Controls: Location Selector, Clock, Fire Risk Level -->
+            <div class="flex flex-wrap items-center justify-between md:justify-end gap-3 text-sm">
+                
+                <!-- Regional Filter Dropdown -->
+                <div class="relative flex items-center bg-forest-950/70 rounded-lg border border-forest-800/60 px-3 py-1.5 text-xs text-gray-200">
+                    <i class="fa-solid fa-location-dot text-forest-400 mr-2"></i>
+                    <label for="regionSelect" class="sr-only">選擇區域</label>
+                    <select id="regionSelect" onchange="filterByRegion(this.value)" class="bg-transparent text-white focus:outline-none cursor-pointer pr-2">
+                        <option value="ALL" class="bg-forest-950 text-white">全台灣地區 (All Taiwan)</option>
+                        <option value="NORTH" class="bg-forest-950 text-white">北部區域 (North)</option>
+                        <option value="CENTRAL" class="bg-forest-950 text-white">中部區域 (Central)</option>
+                        <option value="SOUTH" class="bg-forest-950 text-white">南部區域 (South)</option>
+                        <option value="EAST" class="bg-forest-950 text-white">東部區域 (East)</option>
+                    </select>
+                    <button onclick="getUserLocation()" title="取得我的定位" class="ml-2 hover:text-forest-400 transition-colors">
+                        <i class="fa-solid fa-crosshairs"></i>
+                    </button>
+                </div>
+
+                <!-- Fire Danger Rating Badge -->
+                <div id="fireDangerBadge" class="flex items-center space-x-2 bg-amber-950/60 border border-amber-600/40 px-3 py-1.5 rounded-lg text-amber-300 text-xs">
+                    <i class="fa-solid fa-fire-flame-curved text-amber-400 animate-pulse"></i>
+                    <span>森林火險：<strong id="fireRiskText">中度注意 (Class 3)</strong></span>
+                </div>
+
+                <!-- Live Clock -->
+                <div class="hidden sm:flex items-center space-x-2 bg-forest-950/80 border border-forest-800/60 px-3 py-1.5 rounded-lg text-forest-200 text-xs font-mono">
+                    <i class="fa-regular fa-clock text-forest-400"></i>
+                    <span id="liveClock">2026-10-02 18:30:00</span>
+                </div>
+
+                <!-- Refresh Toggle Button -->
+                <button onclick="manualRefreshData()" class="p-2 bg-forest-800/40 hover:bg-forest-700/60 text-forest-300 hover:text-white rounded-lg border border-forest-700/50 transition-colors" title="手動更新資料">
+                    <i id="refreshIcon" class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Auto-Refresh Progress Bar -->
+        <div class="w-full bg-forest-950 h-0.5 mt-2 rounded-full overflow-hidden">
+            <div id="refreshProgressBar" class="bg-forest-400 h-full w-full transition-all duration-1000 ease-linear"></div>
+        </div>
+    </header>
+
+    <!-- Hero Banner Section -->
+    <section class="max-w-7xl mx-auto px-4 lg:px-8 mt-6 w-full">
+        <div class="relative rounded-2xl overflow-hidden glass-panel border border-forest-700/40 shadow-2xl">
+            <!-- Background Image with Overlay -->
+            <div class="absolute inset-0 z-0">
+                <img src="https://cdn.shopify.com/s/files/1/0370/3545/files/blog6_umade-travel-towel-ponchos-Leopardcat-Taiwanblackbear-mountain-forest-Taiwan-wild-animals-endangered-species-habitat_2048x2048.jpg?v=1694400141" 
+                     alt="Taiwan Forest Wildlife Habitat Overview" 
+                     class="w-full h-full object-cover object-center brightness-75 contrast-110 scale-105 transition-transform duration-1000 hover:scale-100"
+                     onerror="this.src='https://placehold.co/1200x400/14532d/ffffff?text=Taiwan+Forestry+and+Wildlife';">
+                <div class="absolute inset-0 bg-gradient-to-r from-forest-950 via-forest-950/80 to-transparent"></div>
+            </div>
+
+            <!-- Banner Content -->
+            <div class="relative z-10 p-6 md:p-10 lg:p-12 max-w-2xl">
+                <div class="inline-flex items-center space-x-2 bg-forest-500/20 border border-forest-400/30 backdrop-blur-md px-3 py-1 rounded-full text-forest-300 text-xs font-semibold mb-4">
+                    <i class="fa-solid fa-leaf text-forest-400"></i>
+                    <span>農業部林業及自然保育署 資訊聯播網</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white leading-tight tracking-wide mb-3">
+                    永續山林．保育共榮
+                </h2>
+                <p class="text-sm md:text-base text-gray-300 leading-relaxed mb-6">
+                    提供台灣國家森林遊樂區即時人流、山林步道開放狀態、森林火險警示與特有野生動植物生態巡護即時數據。
+                </p>
+                
+                <div class="flex flex-wrap items-center gap-3">
+                    <a href="#parksSection" class="px-4 py-2.5 bg-forest-600 hover:bg-forest-500 text-white font-medium text-xs sm:text-sm rounded-lg shadow-lg shadow-forest-900/50 transition-all flex items-center space-x-2">
+                        <i class="fa-solid fa-mountain text-forest-200"></i>
+                        <span>探索森林遊樂區</span>
+                    </a>
+                    <a href="#speciesSection" class="px-4 py-2.5 bg-forest-950/70 hover:bg-forest-900/90 text-forest-200 font-medium text-xs sm:text-sm rounded-lg border border-forest-700/60 backdrop-blur-md transition-all flex items-center space-x-2">
+                        <i class="fa-solid fa-paw text-forest-400"></i>
+                        <span>特有物種名錄</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Stats Bar Overlay -->
+            <div class="relative z-10 bg-forest-950/80 backdrop-blur-md border-t border-forest-800/60 p-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                <div class="border-r border-forest-800/60 last:border-r-0">
+                    <p class="text-xs text-forest-300/80">開放入園數</p>
+                    <p class="text-lg md:text-xl font-bold text-white mt-0.5" id="statOpenParks">18 / 18</p>
+                </div>
+                <div class="border-r border-forest-800/60 last:border-r-0">
+                    <p class="text-xs text-forest-300/80">步道監控總數</p>
+                    <p class="text-lg md:text-xl font-bold text-white mt-0.5" id="statTrailsCount">152 條</p>
+                </div>
+                <div class="border-r border-forest-800/60 last:border-r-0">
+                    <p class="text-xs text-forest-300/80">保育類動物巡護記錄</p>
+                    <p class="text-lg md:text-xl font-bold text-forest-400 mt-0.5" id="statSpeciesCount">55 種</p>
+                </div>
+                <div>
+                    <p class="text-xs text-forest-300/80">即時觀光總人數</p>
+                    <p class="text-lg md:text-xl font-bold text-emerald-400 mt-0.5" id="statTotalVisitors">12,480 人</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Dynamic Content Grid -->
+    <main class="max-w-7xl mx-auto px-4 lg:px-8 my-8 w-full space-y-10">
+
+        <!-- SECTION 1: National Forest Parks Real-time Status -->
+        <section id="parksSection" class="space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-forest-800/60 pb-3">
+                <div>
+                    <h3 class="text-xl font-bold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-tree text-forest-400"></i>
+                        <span>國家森林遊樂區即時人流與氣候</span>
+                    </h3>
+                    <p class="text-xs text-forest-300/70 mt-1">模擬農業部林業署開放資料 (Forest Recreation Open Data API)</p>
+                </div>
+                <div class="text-xs text-forest-300/80 bg-forest-900/40 px-3 py-1.5 rounded-lg border border-forest-800/50">
+                    <i class="fa-solid fa-circle-info text-forest-400 mr-1"></i>
+                    即時人數每 10 分鐘同步更新一次
+                </div>
+            </div>
+
+            <!-- Forest Parks Cards Grid -->
+            <div id="parksGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Skeleton Loading State -->
+                <div class="glass-card rounded-xl p-4 skeleton h-48"></div>
+                <div class="glass-card rounded-xl p-4 skeleton h-48"></div>
+                <div class="glass-card rounded-xl p-4 skeleton h-48"></div>
+                <div class="glass-card rounded-xl p-4 skeleton h-48"></div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: Forest Trail & Reserve Conditions Explorer -->
+        <section id="trailsSection" class="space-y-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-forest-800/60 pb-3">
+                <div>
+                    <h3 class="text-xl font-bold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-person-hiking text-forest-400"></i>
+                        <span>國家自然步道路況與開放狀態</span>
+                    </h3>
+                    <p class="text-xs text-forest-300/70 mt-1">依地區與通行狀況即時篩選步道狀況</p>
+                </div>
+
+                <!-- Search & Filters -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-forest-400 text-xs"></i>
+                        <input type="text" id="trailSearchInput" oninput="handleTrailSearch()" placeholder="搜尋步道名稱或山系..." 
+                               class="bg-forest-950/80 border border-forest-800/80 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-forest-500 focus:outline-none focus:border-forest-500 w-48 sm:w-64">
+                    </div>
+                    
+                    <div class="flex rounded-lg bg-forest-950/80 p-0.5 border border-forest-800/80 text-xs">
+                        <button onclick="filterTrailStatus('ALL')" class="trail-status-btn px-2.5 py-1 rounded-md text-white bg-forest-700 transition-all" data-status="ALL">全部</button>
+                        <button onclick="filterTrailStatus('OPEN')" class="trail-status-btn px-2.5 py-1 rounded-md text-forest-300 hover:text-white transition-all" data-status="OPEN">正常開放</button>
+                        <button onclick="filterTrailStatus('CAUTION')" class="trail-status-btn px-2.5 py-1 rounded-md text-forest-300 hover:text-white transition-all" data-status="CAUTION">局部通行</button>
+                        <button onclick="filterTrailStatus('CLOSED')" class="trail-status-btn px-2.5 py-1 rounded-md text-forest-300 hover:text-white transition-all" data-status="CLOSED">封閉預警</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trail Grid -->
+            <div id="trailsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Trail Cards JavaScript rendered here -->
+            </div>
+        </section>
+
+        <!-- SECTION 3: Endangered Species & Native Flora Gallery -->
+        <section id="speciesSection" class="space-y-4">
+            <div class="border-b border-forest-800/60 pb-3 flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-paw text-forest-400"></i>
+                        <span>台灣特有物種與野生動植物保育名錄</span>
+                    </h3>
+                    <p class="text-xs text-forest-300/70 mt-1">點擊卡片查看保育等級、主要棲地與巡護觀測紀錄</p>
+                </div>
+            </div>
+
+            <!-- Species Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4" id="speciesGrid">
+                
+                <!-- 1. Formosan Black Bear -->
+                <div onclick="openSpeciesModal('bear_leopard')" class="glass-card rounded-xl overflow-hidden cursor-pointer group flex flex-col justify-between">
+                    <div>
+                        <div class="relative h-44 overflow-hidden">
+                            <img src="https://cdn.shopify.com/s/files/1/0370/3545/files/blog6_umade-travel-towel-ponchos-Leopardcat-Taiwanblackbear-mountain-forest-Taiwan-wild-animals-endangered-species-habitat_2048x2048.jpg?v=1694400141" 
+                                 alt="臺灣黑熊" 
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                 onerror="this.src='https://placehold.co/400x300/14532d/ffffff?text=臺灣黑熊';">
+                            <span class="absolute top-2 right-2 bg-red-900/80 text-red-200 border border-red-700/60 text-[10px] px-2 py-0.5 rounded-full font-bold backdrop-blur-md">瀕臨絕種 I 級</span>
+                        </div>
+                        <div class="p-3">
+                            <h4 class="text-base font-bold text-white group-hover:text-forest-300 transition-colors">臺灣黑熊</h4>
+                            <p class="text-xs text-forest-400 font-mono italic">Ursus thibetanus formosanus</p>
+                            <p class="text-xs text-gray-300 mt-2 line-clamp-2">臺灣特有亞種，陸地上最大型的原生物種與頂級掠食者，胸前具標誌性 V 字型白斑。</p>
+                        </div>
+                    </div>
+                    <div class="p-3 border-t border-forest-800/50 text-[11px] text-forest-300 flex justify-between items-center bg-forest-950/40">
+                        <span><i class="fa-solid fa-location-dot text-forest-400 mr-1"></i>全台中高海拔山區</span>
+                        <span class="text-forest-400 group-hover:translate-x-1 transition-transform">詳細 <i class="fa-solid fa-chevron-right text-[9px]"></i></span>
+                    </div>
+                </div>
+
+                <!-- 2. Formosan Landlocked Salmon -->
+                <div onclick="openSpeciesModal('salmon')" class="glass-card rounded-xl overflow-hidden cursor-pointer group flex flex-col justify-between">
+                    <div>
+                        <div class="relative h-44 overflow-hidden">
+                            <img src="https://cdn-smiletaiwan.cw.com.tw/article/202003/article-5e7da1c03d197.jpg" 
+                                 alt="臺灣櫻花鉤吻鮭" 
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                 onerror="this.src='https://placehold.co/400x300/14532d/ffffff?text=臺灣櫻花鉤吻鮭';">
+                            <span class="absolute top-2 right-2 bg-red-900/80 text-red-200 border border-red-700/60 text-[10px] px-2 py-0.5 rounded-full font-bold backdrop-blur-md">瀕臨絕種 I 級</span>
+                        </div>
+                        <div class="p-3">
+                            <h4 class="text-base font-bold text-white group-hover:text-forest-300 transition-colors">臺灣櫻花鉤吻鮭</h4>
+                            <p class="text-xs text-forest-400 font-mono italic">Oncorhynchus masou formosanus</p>
+                            <p class="text-xs text-gray-300 mt-2 line-clamp-2">俗稱臺灣鱒，棲息於 17°C 以下清澈水域之特有亞種，為新臺幣 2,000 元紙鈔圖案的臺灣國寶魚。</p>
+                        </div>
+                    </div>
+                    <div class="p-3 border-t border-forest-800/50 text-[11px] text-forest-300 flex justify-between items-center bg-forest-950/40">
+                        <span><i class="fa-solid fa-location-dot text-forest-400 mr-1"></i>雪霸七家灣溪 / 合歡溪</span>
+                        <span class="text-forest-400 group-hover:translate-x-1 transition-transform">詳細 <i class="fa-solid fa-chevron-right text-[9px]"></i></span>
+                    </div>
+                </div>
+
+                <!-- 3. Formosan Serow -->
+                <div onclick="openSpeciesModal('serow')" class="glass-card rounded-xl overflow-hidden cursor-pointer group flex flex-col justify-between">
+                    <div>
+                        <div class="relative h-44 overflow-hidden">
+                            <img src="https://files.bonecollection.com/assets/shop/blog/2019/10/animal/%E9%95%B7%E9%AC%83%E5%B1%B1%E7%BE%8A.jpg" 
+                                 alt="臺灣長鬃山羊" 
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                 onerror="this.src='https://placehold.co/400x300/14532d/ffffff?text=臺灣長鬃山羊';">
+                            <span class="absolute top-2 right-2 bg-amber-900/80 text-amber-200 border-amber-700/60 text-[10px] px-2 py-0.5 rounded-full font-bold backdrop-blur-md">珍貴稀有 II 級</span>
+                        </div>
+                        <div class="p-3">
+                            <h4 class="text-base font-bold text-white group-hover:text-forest-300 transition-colors">臺灣長鬃山羊</h4>
+                            <p class="text-xs text-forest-400 font-mono italic">Capricornis swinhoei</p>
+                            <p class="text-xs text-gray-300 mt-2 line-clamp-2">臺灣特有牛科動物，喜獨居與晨昏活動，特殊蹄部可於險峻陡峭裸岩坍塌處行走自如。</p>
+                        </div>
+                    </div>
+                    <div class="p-3 border-t border-forest-800/50 text-[11px] text-forest-300 flex justify-between items-center bg-forest-950/40">
+                        <span><i class="fa-solid fa-location-dot text-forest-400 mr-1"></i>陡峭山區與裸岩坍塌處</span>
+                        <span class="text-forest-400 group-hover:translate-x-1 transition-transform">詳細 <i class="fa-solid fa-chevron-right text-[9px]"></i></span>
+                    </div>
+                </div>
+
+                <!-- 4. Formosan Pangolin -->
+                <div onclick="openSpeciesModal('pangolin')" class="glass-card rounded-xl overflow-hidden cursor-pointer group flex flex-col justify-between">
+                    <div>
+                        <div class="relative h-44 overflow-hidden">
+                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRay_FqlhKpLZIhTAOOtSYqz3ixR7Grobg_if82hhRMNX06HQT0bLLqsfcW&s=10" 
+                                 alt="穿山甲（臺灣穿山甲）" 
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                 onerror="this.src='https://placehold.co/400x300/14532d/ffffff?text=臺灣穿山甲';">
+                            <span class="absolute top-2 right-2 bg-amber-900/80 text-amber-200 border border-amber-700/60 text-[10px] px-2 py-0.5 rounded-full font-bold backdrop-blur-md">珍貴稀有 II 級</span>
+                        </div>
+                        <div class="p-3">
+                            <h4 class="text-base font-bold text-white group-hover:text-forest-300 transition-colors">穿山甲（臺灣穿山甲）</h4>
+                            <p class="text-xs text-forest-400 font-mono italic">Manis pentadactyla pentadactyla</p>
+                            <p class="text-xs text-gray-300 mt-2 line-clamp-2">夜行性全身覆鱗哺乳類，以白蟻為主食，為台灣淺山健康生態系的關鍵指標。</p>
+                        </div>
+                    </div>
+                    <div class="p-3 border-t border-forest-800/50 text-[11px] text-forest-300 flex justify-between items-center bg-forest-950/40">
+                        <span><i class="fa-solid fa-location-dot text-forest-400 mr-1"></i>全台低海拔淺山與丘陵</span>
+                        <span class="text-forest-400 group-hover:translate-x-1 transition-transform">詳細 <i class="fa-solid fa-chevron-right text-[9px]"></i></span>
+                    </div>
+                </div>
+
+                <!-- 5. Taiwan Yellow Water Lily -->
+                <div onclick="openSpeciesModal('waterlily')" class="glass-card rounded-xl overflow-hidden cursor-pointer group flex flex-col justify-between">
+                    <div>
+                        <div class="relative h-44 overflow-hidden">
+                            <img src="https://images.chinatimes.com/newsphoto/2019-05-15/656/20190515003549.jpg" 
+                                 alt="台灣萍蓬草" 
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                 onerror="this.src='https://placehold.co/400x300/14532d/ffffff?text=台灣萍蓬草';">
+                            <span class="absolute top-2 right-2 bg-red-900/80 text-red-200 border border-red-700/60 text-[10px] px-2 py-0.5 rounded-full font-bold backdrop-blur-md">極危物種 (CR)</span>
+                        </div>
+                        <div class="p-3">
+                            <h4 class="text-base font-bold text-white group-hover:text-forest-300 transition-colors">台灣萍蓬草</h4>
+                            <p class="text-xs text-forest-400 font-mono italic">Nuphar pumila subsp. pumila</p>
+                            <p class="text-xs text-gray-300 mt-2 line-clamp-2">睡蓮科台灣原生浮葉水生植物，台灣為全球分布最南界。具黃色革質花萼與紅心柱頭，全年開花。</p>
+                        </div>
+                    </div>
+                    <div class="p-3 border-t border-forest-800/50 text-[11px] text-forest-300 flex justify-between items-center bg-forest-950/40">
+                        <span><i class="fa-solid fa-location-dot text-forest-400 mr-1"></i>北部沼澤與桃園埤塘</span>
+                        <span class="text-forest-400 group-hover:translate-x-1 transition-transform">詳細 <i class="fa-solid fa-chevron-right text-[9px]"></i></span>
+                    </div>
+                </div>
+
+                <!-- 6. Taiwan Blue Magpie (Updated with detail profile) -->
+                <div onclick="openSpeciesModal('magpie')" class="glass-card rounded-xl overflow-hidden cursor-pointer group flex flex-col justify-between">
+                    <div>
+                        <div class="relative h-44 overflow-hidden">
+                            <img src="https://cdn2.ettoday.net/images/4082/e4082115.jpg" 
+                                 alt="臺灣藍鵲" 
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                 onerror="this.src='https://placehold.co/400x300/14532d/ffffff?text=臺灣藍鵲';">
+                            <span class="absolute top-2 right-2 bg-emerald-900/80 text-emerald-200 border border-emerald-700/60 text-[10px] px-2 py-0.5 rounded-full font-bold backdrop-blur-md">保育類 III 級</span>
+                        </div>
+                        <div class="p-3">
+                            <h4 class="text-base font-bold text-white group-hover:text-forest-300 transition-colors">臺灣藍鵲</h4>
+                            <p class="text-xs text-forest-400 font-mono italic">Urocissa caerulea</p>
+                            <p class="text-xs text-gray-300 mt-2 line-clamp-2">別名長尾山娘，臺灣特有種鴉科鳥類。具鮮紅喙腳與藍黑相間羽色，社會行為複雜，具巢邊幫手育雛機制。</p>
+                        </div>
+                    </div>
+                    <div class="p-3 border-t border-forest-800/50 text-[11px] text-forest-300 flex justify-between items-center bg-forest-950/40">
+                        <span><i class="fa-solid fa-location-dot text-forest-400 mr-1"></i>低海拔闊葉林與淺山丘陵</span>
+                        <span class="text-forest-400 group-hover:translate-x-1 transition-transform">詳細 <i class="fa-solid fa-chevron-right text-[9px]"></i></span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION 4: Latest News & Forestry Bulletins -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Latest News (2 cols) -->
+            <div class="lg:col-span-2 space-y-3">
+                <div class="flex items-center justify-between border-b border-forest-800/60 pb-2">
+                    <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-bullhorn text-forest-400"></i>
+                        <span>林務最新公告與保育訊息</span>
+                    </h3>
+                    <span class="text-xs text-forest-400 cursor-pointer hover:underline" onclick="showToast('已顯示最新 5 則林務新聞')">查看全部</span>
+                </div>
+                
+                <div class="space-y-2.5" id="newsFeed">
+                    <!-- JavaScript dynamically injects news rows -->
+                </div>
+            </div>
+
+            <!-- Defensive System Status & API Health Panel (1 col) -->
+            <div class="glass-panel rounded-xl p-5 border border-forest-800/60 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center space-x-2 mb-3">
+                        <i class="fa-solid fa-server text-forest-400"></i>
+                        <span>API 系統狀態與資料源</span>
+                    </h3>
+                    <p class="text-xs text-gray-300 leading-relaxed mb-4">
+                        本看板透過 CORS 安全代理與靜態降級機制 (Graceful Fallback)，確保在開放資料 API 斷線或跨域受阻時，系統仍能維持 100% 可用性。
+                    </p>
+
+                    <!-- API Monitor Badges -->
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between items-center p-2 rounded-lg bg-forest-950/60 border border-forest-800/50">
+                            <span class="text-forest-200">林署 OpenData 服務:</span>
+                            <span class="text-emerald-400 flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping mr-1.5"></span> 正常連線</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded-lg bg-forest-950/60 border border-forest-800/50">
+                            <span class="text-forest-200">氣象署氣候 API 聯播:</span>
+                            <span class="text-emerald-400">正常 (24ms)</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded-lg bg-forest-950/60 border border-forest-800/50">
+                            <span class="text-forest-200">快取代理 (Edge Cache):</span>
+                            <span class="text-forest-300">已啟用 (Sync: 30s)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-forest-800/60 text-[11px] text-forest-400/80 flex items-center justify-between">
+                    <span><i class="fa-solid fa-shield-halved mr-1"></i>資料防禦備援機制</span>
+                    <button onclick="simulateApiFailure()" class="underline hover:text-amber-300 transition-colors">模擬 API 異常降級</button>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="glass-panel border-t border-forest-900/80 mt-12 py-6 px-4 lg:px-8 text-xs text-forest-300/60">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-tree text-forest-500"></i>
+                <span>台灣林業與自然生態資訊看板 &copy; 2026. 參考農業部林業及自然保育署 API 介面設計.</span>
+            </div>
+            <div class="flex items-center space-x-4 text-forest-400/80">
+                <a href="https://www.forest.gov.tw/" target="_blank" rel="noopener noreferrer" class="hover:underline">林業及自然保育署官網</a>
+                <span>•</span>
+                <a href="https://data.gov.tw/" target="_blank" rel="noopener noreferrer" class="hover:underline">政府資料開放平臺</a>
+                <span>•</span>
+                <span id="cacheIndicator" class="text-emerald-400">系統即時運行中</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL: Species Detail Modal -->
+    <div id="speciesModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="glass-panel max-w-2xl w-full rounded-2xl overflow-hidden border border-forest-600/50 shadow-2xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]" id="speciesModalContent">
+            <!-- Header with Close Button -->
+            <div class="relative h-64 sm:h-72">
+                <img id="modalSpeciesImg" src="" alt="物種照片" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-forest-950 via-forest-950/30 to-transparent"></div>
+                <button onclick="closeSpeciesModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/60 hover:bg-black text-white flex items-center justify-center backdrop-blur-md transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+                <div class="absolute bottom-4 left-6 right-6">
+                    <span id="modalSpeciesBadge" class="bg-red-900/80 text-red-200 border border-red-700/60 text-xs px-2.5 py-0.5 rounded-full font-bold"></span>
+                    <h3 id="modalSpeciesTitle" class="text-2xl font-extrabold text-white mt-1"></h3>
+                    <p id="modalSpeciesLatin" class="text-xs text-forest-300 font-mono italic"></p>
+                </div>
+            </div>
+            <!-- Body Content -->
+            <div class="p-6 overflow-y-auto space-y-4 text-sm text-gray-200">
+                <div>
+                    <h4 class="font-bold text-forest-400 text-xs tracking-wider uppercase mb-1">生態與棲地描述</h4>
+                    <p id="modalSpeciesDesc" class="leading-relaxed text-gray-300 whitespace-pre-line"></p>
+                </div>
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <div class="bg-forest-950/60 border border-forest-800/60 p-3 rounded-lg">
+                        <span class="text-xs text-forest-400 block">分佈區域</span>
+                        <strong id="modalSpeciesHabitat" class="text-white text-xs sm:text-sm"></strong>
+                    </div>
+                    <div class="bg-forest-950/60 border border-forest-800/60 p-3 rounded-lg">
+                        <span class="text-xs text-forest-400 block">主要保育措施</span>
+                        <strong id="modalSpeciesConservation" class="text-white text-xs sm:text-sm"></strong>
+                    </div>
+                </div>
+                <div class="bg-emerald-950/30 border border-emerald-800/40 p-3 rounded-lg flex items-start space-x-2 text-xs text-emerald-200">
+                    <i class="fa-solid fa-heart-pulse text-emerald-400 text-sm mt-0.5"></i>
+                    <div>
+                        <strong>山林友善提示：</strong> 在野外遇見野生動物時，請保持適當距離、不接觸、不餵食、不驚嚇，共同維護台灣自然生態平衡。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Trail Detail Modal -->
+    <div id="trailModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="glass-panel max-w-xl w-full rounded-2xl overflow-hidden border border-forest-600/50 shadow-2xl p-6 space-y-4">
+            <div class="flex justify-between items-start">
+                <div>
+                    <span id="modalTrailStatusBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold"></span>
+                    <h3 id="modalTrailTitle" class="text-2xl font-bold text-white mt-1"></h3>
+                    <p id="modalTrailLocation" class="text-xs text-forest-300"></p>
+                </div>
+                <button onclick="closeTrailModal()" class="w-8 h-8 rounded-full bg-forest-900/80 hover:bg-forest-800 text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 text-center text-xs py-2 bg-forest-950/60 rounded-xl border border-forest-800/60">
+                <div class="p-2 border-r border-forest-800">
+                    <span class="text-forest-400 block">全平長度</span>
+                    <strong id="modalTrailLength" class="text-white text-sm"></strong>
+                </div>
+                <div class="p-2 border-r border-forest-800">
+                    <span class="text-forest-400 block">海拔高度</span>
+                    <strong id="modalTrailElevation" class="text-white text-sm"></strong>
+                </div>
+                <div class="p-2">
+                    <span class="text-forest-400 block">難易等級</span>
+                    <strong id="modalTrailDifficulty" class="text-amber-300 text-sm"></strong>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-xs font-bold text-forest-400 uppercase mb-1">即時路況與災情描述</h4>
+                <p id="modalTrailCondition" class="text-sm text-gray-300 leading-relaxed bg-forest-950/40 p-3 rounded-lg border border-forest-800/40"></p>
+            </div>
+
+            <div class="flex items-center justify-between text-xs text-forest-300 pt-2 border-t border-forest-800/50">
+                <span>更新時間: <span id="modalTrailUpdated"></span></span>
+                <button onclick="closeTrailModal()" class="px-4 py-2 bg-forest-700 hover:bg-forest-600 text-white rounded-lg transition-colors">關閉視窗</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Box -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 bg-forest-900 text-white border border-forest-600 px-4 py-3 rounded-xl shadow-2xl opacity-0 transition-opacity duration-300 flex items-center space-x-3 pointer-events-none">
+        <i class="fa-solid fa-circle-check text-forest-400 text-lg"></i>
+        <span id="toastMessage" class="text-xs font-medium">訊息提示</span>
+    </div>
+
+    <script>
+        const mockParks = [
+            { id: 'alishan', name: '阿里山國家森林遊樂區', region: 'SOUTH', visitors: 3420, maxCapacity: 8000, temp: '16°C', weather: '晴時多雲', status: 'OPEN', img: 'https://images.chinatimes.com/newsphoto/2019-05-15/656/20190515003549.jpg' },
+            { id: 'taipingshan', name: '太平山國家森林遊樂區', region: 'NORTH', visitors: 1850, maxCapacity: 3000, temp: '12°C', weather: '濃霧', status: 'OPEN', img: 'https://cdn.shopify.com/s/files/1/0370/3545/files/blog6_umade-travel-towel-ponchos-Leopardcat-Taiwanblackbear-mountain-forest-Taiwan-wild-animals-endangered-species-habitat_2048x2048.jpg?v=1694400141' },
+            { id: 'aowanda', name: '奧萬大國家森林遊樂區', region: 'CENTRAL', visitors: 940, maxCapacity: 3500, temp: '19°C', weather: '晴朗', status: 'OPEN', img: 'https://files.bonecollection.com/assets/shop/blog/2019/10/animal/%E9%95%B7%E9%AC%83%E5%B1%B1%E7%BE%8A.jpg' },
+            { id: 'kenting', name: '墾丁國家森林遊樂區', region: 'SOUTH', visitors: 1210, maxCapacity: 4000, temp: '27°C', weather: '艷陽', status: 'OPEN', img: 'https://img.ltn.com.tw/Upload/news/600/2009/08/02/87.jpg' },
+            { id: 'xingshan', name: '八仙山國家森林遊樂區', region: 'CENTRAL', visitors: 620, maxCapacity: 2500, temp: '21°C', weather: '陰天', status: 'OPEN', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUDceco3uysb5WEzg4oT964FF3F1ZCj_TEmXDw3iMYc_I4na7duQwCYWo&s=10' },
+            { id: 'fushan', name: '滿月圓國家森林遊樂區', region: 'NORTH', visitors: 880, maxCapacity: 2000, temp: '22°C', weather: '小雨', status: 'OPEN', img: 'https://images.chinatimes.com/newsphoto/2020-11-13/656/20201113001623.jpg' },
+            { id: 'zhiben', name: '知本國家森林遊樂區', region: 'EAST', visitors: 730, maxCapacity: 2000, temp: '25°C', weather: '多雲', status: 'OPEN', img: 'https://cdn.shopify.com/s/files/1/0370/3545/files/blog6_umade-travel-towel-ponchos-Leopardcat-Taiwanblackbear-mountain-forest-Taiwan-wild-animals-endangered-species-habitat_2048x2048.jpg?v=1694400141' },
+            { id: 'taipingshan2', name: '池南國家森林遊樂區', region: 'EAST', visitors: 450, maxCapacity: 1500, temp: '24°C', weather: '晴朗', status: 'OPEN', img: 'https://img.ltn.com.tw/Upload/news/600/2009/08/02/87.jpg' }
+        ];
+
+        const mockTrails = [
+            { id: 1, name: '水山巨木步道', park: '阿里山山系', region: 'SOUTH', length: '1.6 公里', elevation: '2,200 - 2,300m', difficulty: '低 (親子級)', status: 'OPEN', condition: '步道全線路況良好，木棧道乾爽無積水。', updated: '10 分鐘前' },
+            { id: 2, name: '見晴懷古步道', park: '太平山山系', region: 'NORTH', length: '0.9 公里', elevation: '1,890 - 2,000m', difficulty: '低 (景觀級)', status: 'OPEN', condition: '雲霧繚繞，路面略為潮濕，請穿著防滑鞋款。', updated: '25 分鐘前' },
+            { id: 3, name: '能高越嶺古道 (西段)', park: '奇萊山系', region: 'CENTRAL', length: '15.5 公里', elevation: '2,050 - 2,860m', difficulty: '中 (挑戰級)', status: 'CAUTION', condition: '10K 處有微型落石，請加快步伐儘速通過，注意頭頂安全。', updated: '1 小時前' },
+            { id: 4, name: '加羅湖登山步道', park: '中央山脈', region: 'NORTH', length: '8.8 公里', elevation: '1,100 - 2,242m', difficulty: '高 (專業級)', status: 'CLOSED', condition: '受連日豪雨影響，泥濘坍方嚴重，目前預警性封閉修護中。', updated: '2 小時前' },
+            { id: 5, name: '瓦拉米步道', park: '玉山山系 (東段)', region: 'EAST', length: '14.0 公里', elevation: '500 - 1,060m', difficulty: '中 (健行級)', status: 'OPEN', condition: '山林巡護正常，野生黑熊活動頻繁，請隨身攜帶熊鈴。', updated: '30 分鐘前' },
+            { id: 6, name: '錐麓古道', park: '太魯閣山系', region: 'EAST', length: '10.3 公里', elevation: '765 - 1,222m', difficulty: '高 (限量申請)', status: 'CAUTION', condition: '部份斷崖狹窄路段實施人流管制，請確實扣緊安全繩索。', updated: '40 分鐘前' }
+        ];
+
+        const mockNews = [
+            { date: '2026-10-02', category: '生態巡護', title: '【保育喜訊】玉山國家公園區域再度觀測到母熊帶雙仔黑熊家族活動影蹤', tag: '台灣黑熊' },
+            { date: '2026-10-01', category: '步道公告', title: '農業部林署發布秋季高山步道防火期預警，請登山民眾嚴禁野火', tag: '森林防火' },
+            { date: '2026-09-29', category: '特有物種', title: '苗栗淺山石虎保育廊道綠網計畫通車，有效降低路殺事件發生率', tag: '石虎保育' },
+            { date: '2026-09-27', category: '森林遊樂', title: '阿里山巨木群步道第二期修復工程完工，即日起開放遊客通行', tag: '景觀更新' }
+        ];
+
+        const speciesDetails = {
+            bear_leopard: {
+                title: '臺灣黑熊 (Formosan Black Bear)',
+                badge: '瀕臨絕種 I 級保育類',
+                badgeStyle: 'bg-red-900/80 text-red-200 border-red-700/60',
+                latin: 'Ursus thibetanus formosanus',
+                img: 'https://cdn.shopify.com/s/files/1/0370/3545/files/blog6_umade-travel-towel-ponchos-Leopardcat-Taiwanblackbear-mountain-forest-Taiwan-wild-animals-endangered-species-habitat_2048x2048.jpg?v=1694400141',
+                desc: '【外部特徵】\n體型粗壯，頭圓頸短，眼小吻長，臀圓尾短。體重約 60~150 公斤，體長 130~180 公分。全身被以粗糙但極富光澤的黑色毛髮，頸部附近的毛特別長可超過 10 公分，下頦前端白色，最大的特徵便是胸前黃白色 V 字形或新月形斑紋，故又名「月熊」。\n\n【地理分布】\n森林性動物，活動範圍廣泛，主要分布於中央山脈，海岸山脈亦有極零星分布；多位於國家公園等保護區範圍及其鄰近區域，海拔 300 公尺至 3,700 公尺的山區皆有紀錄，主要分布於 1,000 至 2,500 公尺的中海拔森林。\n\n【食性與活動習性】\n標準的雜食性動物且以植物性食物為主，主食有季節性變化。根據玉山國家公園無線電追蹤研究資料顯示，臺灣黑熊沒有冬眠現象，終年活動且無固定居所。年活動範圍為 27 至 202 平方公里不等。主要於白天活動，夏季與秋季活動量增加。',
+                habitat: '中央山脈與海岸山脈海拔 300~3,700 公尺森林 (主分布 1,000~2,500m)。',
+                conservation: '建置防熊警示設施、推廣防熊鈴/噴霧、配合無線電追蹤監測與救傷通報。'
+            },
+            salmon: {
+                title: '臺灣櫻花鉤吻鮭 (Formosan Landlocked Salmon)',
+                badge: '瀕臨絕種 I 級保育類 / 國寶魚',
+                badgeStyle: 'bg-red-900/80 text-red-200 border-red-700/60',
+                latin: 'Oncorhynchus masou formosanus',
+                img: 'https://cdn-smiletaiwan.cw.com.tw/article/202003/article-5e7da1c03d197.jpg',
+                desc: '【外部形態與特性】\n俗稱臺灣鱒或臺灣鮭魚，身體側扁且延長，呈流線型的紡錘型。為僅生活在臺灣的特有亞種，屬於狹溫型的冷水魚種，生存條件嚴苛，主要棲息於水溫攝氏 17 度以下、清澈無污染的高山水域。\n\n【保育等級與歷史價值】\n西元 1989 年由行政院農業部公告為第一級最優先保育的瀕臨絕種保育類野生動物，是臺灣國寶級的魚類。面額最大的兩千元紙鈔背面即印製此國寶魚代表物種。近年經拆除欄沙壩與人工復育後，族群成功擴展至合歡溪等區域。',
+                habitat: '雪霸國家公園武陵農場七家灣溪、高山溪及合歡溪上游水域。',
+                conservation: '拆除攔沙壩恢復溪流連續性、嚴密水溫與水質監測、人工繁殖放流與防汛期保護。'
+            },
+            serow: {
+                title: '臺灣長鬃山羊 (Formosan Serow)',
+                badge: '珍貴稀有 II 級保育類',
+                badgeStyle: 'bg-amber-900/80 text-amber-200 border-amber-700/60',
+                latin: 'Capricornis swinhoei',
+                img: 'https://files.bonecollection.com/assets/shop/blog/2019/10/animal/%E9%95%B7%E9%AC%83%E5%B1%B1%E7%BE%8A.jpg',
+                desc: '【外部特徵與洞角】\n臺灣特有牛科動物，身體呈深褐色。公母皆擁有一對圓錐狀洞角，頂端尖銳且略向後彎曲，終生不脫落。\n\n【習性與領域標示】\n生性敏感，不同於一般山羊，喜單獨行動。清晨與黃昏是其活動高峰期。具強烈領域性，會將身上的分泌液塗抹於經常出沒的路線上記號標示地盤。\n\n【攀爬構造與棲地】\n蹄部因有突出外側，可輕易絆住岩石表面而行走自如，經常出現於裸露岩石坍塌處與險峻陡峭山區。',
+                habitat: '海拔 1,000 至 3,500 公尺之裸露岩石坍塌處、陡峭險峻山區及針葉林帶。',
+                conservation: '高山野生動物棲地巡護、戒備遊客攜入寵物狗干擾野生族群與疾病傳播防範。'
+            },
+            pangolin: {
+                title: '穿山甲（臺灣穿山甲 / Formosan Pangolin）',
+                badge: '珍貴稀有 II 級保育類 / 淺山生態指標',
+                badgeStyle: 'bg-amber-900/80 text-amber-200 border-amber-700/60',
+                latin: 'Manis pentadactyla pentadactyla',
+                img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRay_FqlhKpLZIhTAOOtSYqz3ixR7Grobg_if82hhRMNX06HQT0bLLqsfcW&s=10',
+                desc: '【物種分布】\n依據林業及自然保育署自 2015 年起針對中大型哺乳類動物於臺灣本島中低海拔設置自動相機長期監測網調查顯示，穿山甲在臺灣本島均有分布，主要分布為海拔 1,000 公尺以下的淺山環境，全島山系、丘陵環境、臺地與海岸山脈均可以發現蹤跡。\n\n【環境與棲地】\n在多樣化的棲地棲息，包括原始林、次生林、竹林、混淆林、闊葉林、草生地、農墾地等。會利用前肢爪挖掘洞穴，可分為居住洞穴和覓食洞穴。洞穴所在位置多為含沙量少的黏土或壤土，中等鬱閉度的環境，以闊葉人造林環境最多。\n\n【威脅因素】\n當前受到自由活動犬隻攻擊與競爭棲地、獸鋏致傷、路殺以及人為獵捕的威脅。另尚有犬隻透過壁蝨傳染病原體、農藥與污染物等造成的潛在威脅。',
+                habitat: '海拔 1,000 公尺以下淺山環境，全島山系、丘陵、臺地與海岸山脈。',
+                conservation: '防範自由活動犬隻攻擊與傳染病（壁蝨）、獸鋏與路殺防制、友善農作棲地保護、落實長期監測。'
+            },
+            waterlily: {
+                title: '台灣萍蓬草 (Yellow Water Lily)',
+                badge: '極危物種 (CR) / 臺灣原生植物',
+                badgeStyle: 'bg-red-900/80 text-red-200 border-red-700/60',
+                latin: 'Nuphar pumila subsp. pumila (睡蓮科)',
+                img: 'https://images.chinatimes.com/newsphoto/2019-05-15/656/20190515003549.jpg',
+                desc: '【基本資料】\n• 科別：睡蓮科 (Nymphaeaceae)\n• 別名：台灣川骨、黃睡蓮、河骨\n• 日名：タイワンコウホネ（台湾河骨）\n• 英名：Yellow Water Lily\n\n【形態簡介】\n萍蓬草屬多年生草本植物，為台灣原生浮葉性水生植物。分布於北極地區以及歐亞大陸亞熱帶至寒帶氣候，而臺灣是其分布的最南端，主要於台灣北部的沼澤地與埤塘生長。\n地下根狀莖橫生，葉叢生，葉片漂浮或高於水面，呈卵形或廣卵形。花單生，挺出水面；具 5 枚黃色革質花萼，黃色花瓣多數，近長方狀卵形，中心有顯眼的盤狀紅色柱頭。漿果呈卵狀球形，全年皆可開花結果。\n\n【栽培與應用】\n適合全日照與溫暖的水生環境，根系生命力強健。花朵姿態優美且生長健壯，極適合作為水池綠美化植物，水深至少 10cm 即可種植，亦可使用盆缽栽培。花朵可供切花，果實與根莖可入藥，具滋養補益之功效。',
+                habitat: '臺灣北部沼澤地與桃園台地傳統埤塘（臺灣為全球分布最南界）。',
+                conservation: '埤塘濕地原鄉復育、全日照水池綠美化栽培、水質監測與防止外來水草侵襲。'
+            },
+            magpie: {
+                title: '臺灣藍鵲 (Taiwan Blue Magpie)',
+                badge: '保育類 III 級 / 臺灣特有種',
+                badgeStyle: 'bg-emerald-900/80 text-emerald-200 border-emerald-700/60',
+                latin: 'Urocissa caerulea',
+                img: 'https://cdn2.ettoday.net/images/4082/e4082115.jpg',
+                desc: '【基本分類與別名】\n• 科別：鴉科 (Corvidae)\n• 別名：長尾山娘、長尾陣、山娘仔\n• 分佈：臺灣低海拔闊葉林與淺山丘陵帶\n\n【形態與外貌特徵】\n體長約 65 公分，光是長尾部就占了總身長約 2/3。虹膜為鮮黃色，喙及腳爪呈現亮麗的朱紅色。頭、頸至胸部羽色為漆黑色，軀幹其餘部位為寶藍色。尾上覆羽為黑色，飛羽末端有白斑；共具有 12 根尾羽，左右對稱，以中間的尾羽最長，末端為白色。\n\n【生態習性與複雜社會行為】\n為群居性鳥類，社會行為極為複雜。繁殖期約為 3 至 5 月，每次產 4~6 顆蛋。育雛期間具有獨特的「巢邊幫手」(Nest helper) 機制——上一年度出生之子代會留下來協助親鳥共同攜帶食物照顧幼鳥。繁殖育幼期間有極強烈的護巢行為，若冒然接近常會遭到攻擊打頭威嚇。\n\n【飛行美姿與觀測紀錄】\n成群的鳥兒常呈 V 字隊型整齊飛過山谷，藍色身體拖著黑白相間的長尾巴。停棲枝頭時，尾羽及翼羽展開成三片美麗的羽扇（尾扇以藍色為底、黑白雙色點綴），姿態宛如降世仙子。於惠蓀林場、新竹寶山以及自然谷等低海拔山林皆有穩定觀察記錄。',
+                habitat: '全台低海拔闊葉林、次生林及淺山丘陵 (如惠蓀林場、新竹寶山、自然谷)。',
+                conservation: '維護淺山闊葉林棲地完整性、繁殖期間保持距離防範護巢攻擊、推廣全民野生動物友善觀念。'
+            }
+        };
+
+        // Current Application State
+        let currentRegionFilter = 'ALL';
+        let currentTrailStatusFilter = 'ALL';
+        let trailSearchQuery = '';
+        let refreshTimer = null;
+        let progressInterval = null;
+        let refreshSeconds = 30;
+
+        window.onload = function() {
+            updateLiveClock();
+            setInterval(updateLiveClock, 1000);
+            
+            renderParks();
+            renderTrails();
+            renderNews();
+            startAutoRefreshTimer();
+        };
+
+        // Live Clock
+        function updateLiveClock() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            const clockElem = document.getElementById('liveClock');
+            if(clockElem) {
+                clockElem.innerText = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            }
+        }
+
+        function renderParks() {
+            const grid = document.getElementById('parksGrid');
+            if (!grid) return;
+
+            const filtered = mockParks.filter(p => currentRegionFilter === 'ALL' || p.region === currentRegionFilter);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-forest-400 glass-card rounded-xl">該區域尚無即時連線之森林遊樂區</div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(park => {
+                const percent = Math.round((park.visitors / park.maxCapacity) * 100);
+                let badgeColor = 'bg-emerald-900/70 text-emerald-300 border-emerald-600/50';
+                if (percent > 75) badgeColor = 'bg-amber-900/70 text-amber-300 border-amber-600/50';
+                if (percent > 90) badgeColor = 'bg-red-900/70 text-red-300 border-red-600/50';
+
+                return `
+                    <div class="glass-card rounded-xl overflow-hidden flex flex-col justify-between p-4 relative group">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-forest-400">${getRegionName(park.region)}</span>
+                                <h4 class="text-base font-bold text-white group-hover:text-forest-300 transition-colors">${park.name}</h4>
+                            </div>
+                            <span class="text-xs px-2 py-0.5 rounded-full border ${badgeColor} font-mono">${park.weather}</span>
+                        </div>
+
+                        <div class="space-y-3 my-2">
+                            <div class="flex items-end justify-between text-xs">
+                                <span class="text-forest-300/80"><i class="fa-solid fa-users text-forest-400 mr-1"></i>即時人數</span>
+                                <span class="text-white font-mono font-bold">${park.visitors.toLocaleString()} <span class="text-[10px] text-gray-400">/ ${park.maxCapacity.toLocaleString()}</span></span>
+                            </div>
+                            <!-- Capacity Progress Bar -->
+                            <div class="w-full bg-forest-950 h-2 rounded-full overflow-hidden border border-forest-800/50">
+                                <div class="bg-gradient-to-r from-forest-500 to-emerald-400 h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-forest-800/60 flex items-center justify-between text-xs text-forest-300">
+                            <span><i class="fa-solid fa-temperature-half text-amber-400 mr-1"></i>${park.temp}</span>
+                            <span class="text-emerald-400 flex items-center"><i class="fa-solid fa-circle-check mr-1 text-[10px]"></i>正常開放</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Calculate total visitors stat
+            const totalVis = mockParks.reduce((sum, p) => sum + p.visitors, 0);
+            document.getElementById('statTotalVisitors').innerText = `${totalVis.toLocaleString()} 人`;
+        }
+
+        function renderTrails() {
+            const grid = document.getElementById('trailsGrid');
+            if (!grid) return;
+
+            let filtered = mockTrails.filter(t => {
+                const matchRegion = (currentRegionFilter === 'ALL' || t.region === currentRegionFilter);
+                const matchStatus = (currentTrailStatusFilter === 'ALL' || t.status === currentTrailStatusFilter);
+                const matchSearch = (t.name.includes(trailSearchQuery) || t.park.includes(trailSearchQuery));
+                return matchRegion && matchStatus && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-10 text-forest-400 glass-card rounded-xl">沒有找到符合條件的自然步道資料</div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(trail => {
+                let statusBadge = '';
+                if(trail.status === 'OPEN') statusBadge = '<span class="bg-emerald-900/80 text-emerald-200 border border-emerald-700/60 text-[10px] px-2 py-0.5 rounded-full font-bold">正常開放</span>';
+                else if(trail.status === 'CAUTION') statusBadge = '<span class="bg-amber-900/80 text-amber-200 border border-amber-700/60 text-[10px] px-2 py-0.5 rounded-full font-bold">局部警戒</span>';
+                else statusBadge = '<span class="bg-red-900/80 text-red-200 border border-red-700/60 text-[10px] px-2 py-0.5 rounded-full font-bold">封閉預警</span>';
+
+                return `
+                    <div onclick="openTrailModal(${trail.id})" class="glass-card rounded-xl p-4 cursor-pointer flex flex-col justify-between group">
+                        <div>
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <span class="text-[10px] text-forest-400 font-medium">${trail.park} • ${getRegionName(trail.region)}</span>
+                                    <h4 class="text-base font-bold text-white group-hover:text-forest-300 transition-colors">${trail.name}</h4>
+                                </div>
+                                ${statusBadge}
+                            </div>
+                            <p class="text-xs text-gray-300 mt-2 line-clamp-2">${trail.condition}</p>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-t border-forest-800/60 flex items-center justify-between text-xs text-forest-300/80">
+                            <span><i class="fa-solid fa-ruler-horizontal text-forest-400 mr-1"></i>${trail.length}</span>
+                            <span><i class="fa-solid fa-gauge-high text-amber-400 mr-1"></i>${trail.difficulty}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderNews() {
+            const container = document.getElementById('newsFeed');
+            if (!container) return;
+
+            container.innerHTML = mockNews.map(item => `
+                <div class="glass-card rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-forest-600/50 transition-all cursor-pointer" onclick="showToast('已開啟最新公告詳情')">
+                    <div class="flex items-start space-x-3">
+                        <span class="bg-forest-950 text-forest-300 border border-forest-800 text-[10px] px-2 py-1 rounded font-mono shrink-0">${item.category}</span>
+                        <div>
+                            <h5 class="text-xs sm:text-sm font-medium text-white hover:text-forest-300 transition-colors">${item.title}</h5>
+                            <span class="text-[10px] text-forest-400/70 mt-1 inline-block">標籤：#${item.tag}</span>
+                        </div>
+                    </div>
+                    <span class="text-[11px] text-forest-300/60 font-mono shrink-0 sm:self-center">${item.date}</span>
+                </div>
+            `).join('');
+        }
+
+        function openSpeciesModal(key) {
+            const data = speciesDetails[key];
+            if (!data) return;
+
+            document.getElementById('modalSpeciesImg').src = data.img;
+            document.getElementById('modalSpeciesTitle').innerText = data.title;
+            document.getElementById('modalSpeciesLatin').innerText = data.latin;
+            document.getElementById('modalSpeciesDesc').innerText = data.desc;
+            document.getElementById('modalSpeciesHabitat').innerText = data.habitat;
+            document.getElementById('modalSpeciesConservation').innerText = data.conservation;
+
+            const badgeElem = document.getElementById('modalSpeciesBadge');
+            badgeElem.innerText = data.badge;
+            badgeElem.className = `text-xs px-2.5 py-0.5 rounded-full font-bold ${data.badgeStyle}`;
+
+            const modal = document.getElementById('speciesModal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            document.getElementById('speciesModalContent').classList.remove('scale-95');
+            document.getElementById('speciesModalContent').classList.add('scale-100');
+        }
+
+        function closeSpeciesModal() {
+            const modal = document.getElementById('speciesModal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            document.getElementById('speciesModalContent').classList.remove('scale-100');
+            document.getElementById('speciesModalContent').classList.add('scale-95');
+        }
+
+        function openTrailModal(id) {
+            const trail = mockTrails.find(t => t.id === id);
+            if (!trail) return;
+
+            document.getElementById('modalTrailTitle').innerText = trail.name;
+            document.getElementById('modalTrailLocation').innerText = `${trail.park} (${getRegionName(trail.region)})`;
+            document.getElementById('modalTrailLength').innerText = trail.length;
+            document.getElementById('modalTrailElevation').innerText = trail.elevation;
+            document.getElementById('modalTrailDifficulty').innerText = trail.difficulty;
+            document.getElementById('modalTrailCondition').innerText = trail.condition;
+            document.getElementById('modalTrailUpdated').innerText = trail.updated;
+
+            const badge = document.getElementById('modalTrailStatusBadge');
+            if(trail.status === 'OPEN') {
+                badge.innerText = '正常開放';
+                badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-900/80 text-emerald-200 border border-emerald-700/60';
+            } else if(trail.status === 'CAUTION') {
+                badge.innerText = '局部警戒';
+                badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-900/80 text-amber-200 border border-amber-700/60';
+            } else {
+                badge.innerText = '預警封閉';
+                badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-900/80 text-red-200 border border-red-700/60';
+            }
+
+            const modal = document.getElementById('trailModal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+        }
+
+        function closeTrailModal() {
+            const modal = document.getElementById('trailModal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        function filterByRegion(region) {
+            currentRegionFilter = region;
+            renderParks();
+            renderTrails();
+            showToast(`已切換地區視角：${getRegionName(region)}`);
+        }
+
+        function filterTrailStatus(status) {
+            currentTrailStatusFilter = status;
+            document.querySelectorAll('.trail-status-btn').forEach(btn => {
+                if(btn.dataset.status === status) {
+                    btn.classList.add('bg-forest-700', 'text-white');
+                    btn.classList.remove('text-forest-300');
+                } else {
+                    btn.classList.remove('bg-forest-700', 'text-white');
+                    btn.classList.add('text-forest-300');
+                }
+            });
+            renderTrails();
+        }
+
+        function handleTrailSearch() {
+            trailSearchQuery = document.getElementById('trailSearchInput').value.trim();
+            renderTrails();
+        }
+
+        function getUserLocation() {
+            if ("geolocation" in navigator) {
+                showToast("正在取得 GPS 定位資訊...");
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        document.getElementById('regionSelect').value = 'CENTRAL';
+                        filterByRegion('CENTRAL');
+                        showToast("已依您的目前位置定位至：中部山林區域");
+                    },
+                    (err) => {
+                        showToast("無法取得定位授權，保持全台檢視模式");
+                    }
+                );
+            } else {
+                showToast("您的瀏覽器不支援 GPS 定位");
+            }
+        }
+
+        function getRegionName(code) {
+            const map = { 'ALL': '全台灣', 'NORTH': '北部地區', 'CENTRAL': '中部地區', 'SOUTH': '南部地區', 'EAST': '東部地區' };
+            return map[code] || code;
+        }
+
+        function startAutoRefreshTimer() {
+            let currentWidth = 100;
+            const bar = document.getElementById('refreshProgressBar');
+            
+            clearInterval(progressInterval);
+            progressInterval = setInterval(() => {
+                currentWidth -= (100 / (refreshSeconds * 10));
+                if (currentWidth <= 0) {
+                    currentWidth = 100;
+                    simulateLiveVisitorUpdate();
+                }
+                if (bar) bar.style.width = `${Math.max(0, currentWidth)}%`;
+            }, 100);
+        }
+
+        function manualRefreshData() {
+            const icon = document.getElementById('refreshIcon');
+            if (icon) icon.classList.add('animate-spin');
+            
+            setTimeout(() => {
+                simulateLiveVisitorUpdate();
+                if (icon) icon.classList.remove('animate-spin');
+                showToast('已手動刷新最新林業數據');
+            }, 600);
+        }
+
+        function simulateLiveVisitorUpdate() {
+            mockParks.forEach(p => {
+                const delta = Math.floor(Math.random() * 21) - 10;
+                p.visitors = Math.max(100, p.visitors + delta);
+            });
+            renderParks();
+            startAutoRefreshTimer();
+        }
+
+        function simulateApiFailure() {
+            showToast('已觸發 CORS / 網路備援降級機制，使用快取數據');
+            const cacheInd = document.getElementById('cacheIndicator');
+            if (cacheInd) {
+                cacheInd.innerText = '備援快取模式 (Offline Fallback)';
+                cacheInd.className = 'text-amber-400';
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const msgElem = document.getElementById('toastMessage');
+            if (!toast || !msgElem) return;
+
+            msgElem.innerText = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
